@@ -96,4 +96,38 @@ public class Vehicle {
         }
         return "Brown";
     }
+
+    public boolean isBlocked(java.util.List<Vehicle> vehicles) {
+        final int SAFE_DISTANCE = 50;
+        for (Vehicle other : vehicles) {
+            if (this.x == other.x && this.y == other.y && this.dir == other.dir) {
+                continue;
+            }
+            if (other.dir == this.dir) {
+                switch (this.dir) {
+                    case North:
+                        if (other.y > this.y && other.y - this.y <= SAFE_DISTANCE) {
+                            return true;
+                        }
+                        break;
+                    case South:
+                        if (other.y < this.y && this.y - other.y <= SAFE_DISTANCE) {
+                            return true;
+                        }
+                        break;
+                    case West:
+                        if (other.x < this.x && this.x - other.x <= SAFE_DISTANCE) {
+                            return true;
+                        }
+                        break;
+                    case East:
+                        if (other.x > this.x && other.x - this.x <= SAFE_DISTANCE) {
+                            return true;
+                        }
+                        break;
+                }
+            }
+        }
+        return false;
+    }
 }
