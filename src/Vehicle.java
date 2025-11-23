@@ -3,10 +3,12 @@ import java.awt.Color;
 // Represents a vehicle in the simulation including position, direction
 // and simple movement/turning logic. Methods are kept small and focused.
 public class Vehicle {
+
     public int x;
     public int y;
     public MovementDirection dir;
     public MovementDirection startDir;
+    
     public Color color;
     public String colorName;
     public boolean turned;
@@ -72,6 +74,7 @@ public class Vehicle {
     // Check and perform a turn when the vehicle reaches a turning point.
     // Uses color as a simple routing decision in this demo simulation.
     public void turnCheck() {
+
         // Check for arrival at predefined turning points. This demo uses
         // vehicle color as a simple routing signal: Yellow & Brown decide
         // which way to turn when they reach a specific tile.
@@ -112,10 +115,12 @@ public class Vehicle {
                 this.turned = true;
             }
         }
+
     }
 
     // Return a random color name used when spawning vehicles.
     public static String randColorName() {
+
         int rand = (int) (Math.random() * 3);
         switch (rand) {
             case 0:
@@ -125,14 +130,17 @@ public class Vehicle {
             default:
                 return "Brown";
         }
+
     }
 
     // Return true when another vehicle is within a safe distance in the
     // same lane/direction, preventing this vehicle from moving forward.
     public boolean blocked(java.util.List<Vehicle> vehicles) {
+
         // Determine whether another vehicle is too close ahead in the
         // same lane and direction. If so, this vehicle should not move.
         final int SAFE_DISTANCE = 95;
+
         for (Vehicle other : vehicles) {
             // Skip self-comparison when multiple references point to same coords
             if (this.x == other.x && this.y == other.y && this.dir == other.dir) {
@@ -167,6 +175,7 @@ public class Vehicle {
                 }
             }
         }
+
         return false;
     }
 }

@@ -11,10 +11,11 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 // Main application panel for the traffic simulation.
-//
+
 // Keeps the vehicle list and traffic hub, handles painting and user input.
 // Small, focused methods below separate responsibilities (loading images,
 // updating simulation state, and drawing) for readability and testability.
+
 public class Main extends JPanel implements ActionListener {
         
     private static final int WIDTH = 800;
@@ -27,10 +28,13 @@ public class Main extends JPanel implements ActionListener {
 
     // Initialize UI, load assets, and start the simulation timer.
     public Main() {
+
         loadImages();
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setFocusable(true);
+        
         addKeyListener(new KeyAdapter() {
+
             @Override
             public void keyPressed(KeyEvent e) {
                 switch (e.getKeyCode()) {
@@ -70,6 +74,7 @@ public class Main extends JPanel implements ActionListener {
     // Images are keyed by color and initial movement direction.
     // Failure to load an image is logged but does not stop the app.
     private void loadImages() {
+
         String[] colors = {"Blue", "Yellow", "Brown"};
         String[] directions = {"up", "down", "left", "right"};
         MovementDirection[] dirs = {MovementDirection.North, MovementDirection.South, MovementDirection.West, MovementDirection.East};
@@ -87,6 +92,7 @@ public class Main extends JPanel implements ActionListener {
                 }
             }
         }
+
     }
 
     @Override
@@ -102,6 +108,7 @@ public class Main extends JPanel implements ActionListener {
     // - move vehicles that are allowed to move
     // - remove vehicles that moved off-screen
     private void update() {
+
         // Update traffic lights first so vehicles react in this tick.
         TrafficSystem.updateLights(hub, vehicleList);
 
@@ -127,6 +134,7 @@ public class Main extends JPanel implements ActionListener {
 
         // Remove vehicles that have left the visible canvas to free memory.
         vehicleList.removeIf(v -> v.y > 740 || v.y < -40 || v.x > 840 || v.x < -40);
+
     }
 
     @Override
@@ -137,6 +145,7 @@ public class Main extends JPanel implements ActionListener {
 
     // Render the scene: background, roads, traffic lights, and vehicles.
     private void draw(Graphics2D g) {
+
         g.setColor(new Color(5, 8, 15));
         g.fillRect(0, 0, WIDTH, HEIGHT);
 
@@ -172,6 +181,7 @@ public class Main extends JPanel implements ActionListener {
                     baseWidth = 45;
                     baseHeight = 30;
                 }
+
                 int width = (int) Math.round(baseWidth * 1.2);
                 int height = (int) Math.round(baseHeight * 1.2);
 
@@ -179,6 +189,7 @@ public class Main extends JPanel implements ActionListener {
                 int x = v.x - width / 2;
                 int y = v.y - height / 2;
                 g.drawImage(img, x, y, width, height, null);
+
             } else {
                 // Fallback: draw a simple colored rectangle when the image
                 // asset is unavailable (helps debugging and testing).
@@ -187,7 +198,8 @@ public class Main extends JPanel implements ActionListener {
                 int y = v.y;
                 int w = (int) Math.round(30 * 1.2);
                 int h = (int) Math.round(45 * 1.2);
-                g.fillRect(x - w/2, y - h/2, w, h);
+                g.fillRect(x - w/2, y - h/2, w, h);*
+
             }
         }
 
@@ -208,6 +220,7 @@ public class Main extends JPanel implements ActionListener {
     // coordinates and direction. Prevents overcrowding and enforces a
     // minimum distance to existing vehicles.
     private static boolean canSpawnVehicle(List<Vehicle> vehicleList, int spawnX, int spawnY, MovementDirection dir) {
+
         final int MAX_VEHICLES = 28;
         final int MIN_SPAWN_DISTANCE = 80;
 
@@ -246,6 +259,7 @@ public class Main extends JPanel implements ActionListener {
     }
 
     private static void addRandom(List<Vehicle> vehicleList) {
+
         int rand = (int) (Math.random() * 4);
         
         switch (rand) {
@@ -266,6 +280,7 @@ public class Main extends JPanel implements ActionListener {
     }
 
     public static void main(String[] args) {
+
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Jraffic");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -273,5 +288,6 @@ public class Main extends JPanel implements ActionListener {
             frame.pack();
             frame.setVisible(true);
         });
+        
     }
 }

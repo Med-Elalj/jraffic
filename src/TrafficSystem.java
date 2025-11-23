@@ -4,6 +4,7 @@ import java.util.List;
 // simple lane capacity heuristics. It is intentionally lightweight — the
 // update logic computes simple priorities and rotates phases based on queues.
 public class TrafficSystem {
+
     private static final int PHASE_DURATION_FRAMES = 100;
 
     private static final int VEHICLE_LENGTH = 45;
@@ -22,8 +23,10 @@ public class TrafficSystem {
     // Used to ensure phase changes do not send conflicting traffic through
     // the intersection at the same time.
     private static boolean intersectionIsClear(List<Vehicle> vehicles) {
+
         int intersectionLeft = 301;
         int intersectionRight = 469;
+        
         int intersectionTop = 241;
         int intersectionBottom = 419;
 
@@ -37,16 +40,20 @@ public class TrafficSystem {
                 return false;
             }
         }
+
         return true;
+
     }
 
     // TrafficHub stores the current phase state (which direction is green),
     // timers, and pending phase requests waiting for the intersection to clear.
     public static class TrafficHub {
+
         public boolean northOn;
         public boolean southOn;
         public boolean eastOn;
         public boolean westOn;
+        
         public MovementDirection phase;
         public int timer;
         public int phaseDuration;
@@ -65,12 +72,14 @@ public class TrafficSystem {
             this.pendingPhase = null;
             this.pendingTimer = 0;
         }
+        
     }
 
     // Set `vehicle.moving` depending on whether the hub currently allows
     // vehicles of that direction to pass at their lane boundary. This is a
     // simple gate (on/off) used by the vehicle update loop.
     public static void checkLights(Vehicle vehicle, TrafficHub hub) {
+
         if ((!hub.southOn && vehicle.dir == MovementDirection.South && vehicle.y == 420)
                 || (!hub.northOn && vehicle.dir == MovementDirection.North && vehicle.y == 240)
                 || (!hub.westOn && vehicle.dir == MovementDirection.East && vehicle.x == 300)
@@ -79,6 +88,7 @@ public class TrafficSystem {
         } else {
             vehicle.moving = true;
         }
+
     }
 
     // Update traffic light phase based on simple queue length heuristics and
@@ -118,6 +128,7 @@ public class TrafficSystem {
         double priorityForPhaseEast = pFromEast;
 
         double currentPriority = 0;
+
         switch (hub.phase) {
             case North:
                 currentPriority = priorityForPhaseNorth;
@@ -137,6 +148,7 @@ public class TrafficSystem {
         int base = PHASE_DURATION_FRAMES;
         int maxExtra = 400;
         boolean atCapacity = false;
+
         switch (hub.phase) {
             case North:
                 atCapacity = qNorth >= capNorth && capNorth > 0;
@@ -166,6 +178,7 @@ public class TrafficSystem {
         }
 
         if (hub.timer >= hub.phaseDuration) {
+
             hub.timer = 0;
             double highest = 0;
             MovementDirection newPhase = hub.phase;
@@ -216,6 +229,7 @@ public class TrafficSystem {
                     hub.pendingPhase = newPhase;
                 }
             }
+            
         }
 
         // If a phase is pending, wait for the intersection to become clear
