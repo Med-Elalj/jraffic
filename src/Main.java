@@ -10,22 +10,20 @@ import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
 
-public class Main extends JPanel {
-
+public class Main extends JPanel implements ActionListener {
     private static final int WIDTH = 800;
     private static final int HEIGHT = 700;
 
     private List<Vehicle> vehicleList = new ArrayList<>();
     private TrafficSystem.TrafficHub hub = new TrafficSystem.TrafficHub();
+    private Timer timer;
     private Map<String, BufferedImage> vehicleImages = new HashMap<>();
 
     public Main() {
-
         loadImages();
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setFocusable(true);
         addKeyListener(new KeyAdapter() {
-
             @Override
             public void keyPressed(KeyEvent e) {
                 switch (e.getKeyCode()) {
@@ -48,10 +46,12 @@ public class Main extends JPanel {
                         System.exit(0);
                         break;
                 }
-                repaint();
             }
         });
 
+        timer = new Timer(16, this); 
+        timer.start();
+    }
 
     private void loadImages() {
         String[] colors = {"Blue", "Yellow", "Brown"};
@@ -74,13 +74,35 @@ public class Main extends JPanel {
     }
 
     @Override
+    public void actionPerformed(ActionEvent e) {
+        update();
+        repaint();
+    }
+
+    private void update() {
+        TrafficSystem.updateLights(hub, vehicleList);
+
+        List<Vehicle> snapshot = new ArrayList<>(vehicleList);
+        for (Vehicle vehicle : vehicleList) {
+            TrafficSystem.checkLights(vehicle, hub);
+            if (vehicle.moving && !vehicle.blocked(snapshot)) {
+                vehicle.step();
+            }
+            if (!vehicle.turned) {
+                vehicle.turnCheck();
+            }
+        }
+
+        vehicleList.removeIf(v -> v.y > 740 || v.y < -40 || v.x > 840 || v.x < -40);
+    }
+
+    @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         draw((Graphics2D) g);
     }
 
     private void draw(Graphics2D g) {
-
         g.setColor(new Color(5, 8, 15));
         g.fillRect(0, 0, WIDTH, HEIGHT);
 
@@ -96,10 +118,9 @@ public class Main extends JPanel {
         g.setColor(new Color(0, 128, 255, 204)); 
         g.drawOval(392, 342, 15, 15);
 
-
         drawTrafficLight(g, 310, 260, hub.northOn); 
         drawTrafficLight(g, 310, 410, hub.westOn);  
-        drawTrafficLight(g, 460, 410, hub.southOn); 
+        drawTrafficLight(g, 460, 410, hub.southOn);
         drawTrafficLight(g, 460, 260, hub.eastOn);  
 
         for (Vehicle v : vehicleList) {
@@ -119,9 +140,7 @@ public class Main extends JPanel {
                 int x = v.x - width / 2;
                 int y = v.y - height / 2;
                 g.drawImage(img, x, y, width, height, null);
-
             } else {
-
                 g.setColor(v.color);
                 int x = v.x;
                 int y = v.y;
@@ -130,7 +149,6 @@ public class Main extends JPanel {
                 g.fillRect(x - w/2, y - h/2, w, h);
             }
         }
-
 
         g.setColor(new Color(48, 144, 255, 229)); 
         g.drawString("Arrows to Spawn Vehicles | R Random | ESC Exit", 12, 24);
@@ -144,7 +162,6 @@ public class Main extends JPanel {
     }
 
     private static boolean canSpawnVehicle(List<Vehicle> vehicleList, int spawnX, int spawnY, MovementDirection dir) {
-
         final int MAX_VEHICLES = 28;
         final int MIN_SPAWN_DISTANCE = 80;
 
@@ -157,15 +174,12 @@ public class Main extends JPanel {
             && Math.abs(spawnX - v.x) < MIN_SPAWN_DISTANCE
             && Math.abs(spawnY - v.y) < MIN_SPAWN_DISTANCE
         );
-
     }
 
     private static void addVehicleAt(List<Vehicle> vehicleList, int x, int y, MovementDirection dir) {
-
         if (canSpawnVehicle(vehicleList, x, y, dir)) {
             vehicleList.add(Vehicle.spawn(x, y, dir, Vehicle.randColorName()));
         }
-
     }
 
     private static void addSouth(List<Vehicle> vehicleList) {
@@ -185,9 +199,7 @@ public class Main extends JPanel {
     }
 
     private static void addRandom(List<Vehicle> vehicleList) {
-
         int rand = (int) (Math.random() * 4);
-
         switch (rand) {
             case 0:
                 addSouth(vehicleList);
@@ -202,11 +214,9 @@ public class Main extends JPanel {
                 addEast(vehicleList);
                 break;
         }
-
     }
 
     public static void main(String[] args) {
-
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Jraffic");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -214,6 +224,5 @@ public class Main extends JPanel {
             frame.pack();
             frame.setVisible(true);
         });
-        
     }
 }
