@@ -33,9 +33,6 @@ public class TrafficSystem {
         }
         return true;
     }
-    public int add() {
-        return 2 + 3;
-    }
 
     public static class TrafficHub {
         public boolean northOn;
