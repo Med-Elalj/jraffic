@@ -1,7 +1,7 @@
 # Traffic Simulator 🚦
 
 
-> An AI-driven traffic intersection simulator with intelligent traffic management, real-time physics, and immersive visuals. Experience the future of urban mobility simulation!
+> An AI-driven traffic intersection simulator with intelligent traffic management, real-time physics, and immersive visuals. Experience efficient urban mobility through interactive simulation!
 
 ## ✨ Features
 
@@ -23,7 +23,7 @@
 - **Cross-Platform**: Runs on Windows, macOS, Linux, and more
 
 ### 🛠️ Technical Excellence
-- **Implementation in Java**: Portable and easy to run
+- **Pure Java Implementation**: No external dependencies, fully portable
 - **Modular Architecture**: Clean separation of concerns for easy maintenance
 - **Performance Optimized**: Efficient algorithms for large-scale simulations
 - **Extensible Design**: Easy to add new features and vehicle types
@@ -34,24 +34,30 @@
 
 *Watch vehicles navigate the intersection with intelligent traffic lights adapting to flow*
 
-## 🚀 Quick Start
+## 🚀 Getting Started
 
 ### Prerequisites
-- **Java Version**: Java 17+ (no external dependencies)
+- **Java Development Kit (JDK)**: Version 17 or higher
+- **No external dependencies** required
 
-### Installation & Running
+### Building the Project
 
-#### ☕ Java Version
-```bash
-# Navigate to Java implementation
-cd java
+1. **Clone the repository**:
+   ```bash
+   git clone https://learn.zone01oujda.ma/git/yfaris/jraffic.git
+   cd jraffic
+   ```
 
-# Compile to build directory
-javac -d build *.java
+2. **Compile the source code**:
+   ```bash
+   cd src
+   javac -d ../build *.java
+   ```
 
-# Run the application
-java -cp build Main
-```
+3. **Run the simulator**:
+   ```bash
+   java -cp ../build Main
+   ```
 
 ## 🎮 Controls
 
@@ -66,18 +72,18 @@ java -cp build Main
 
 ## 🏗️ Architecture
 
-### Java Implementation
+### Source Code Structure
 ```
-java/
-├── Main.java         # Swing GUI, animation loop
-├── Vehicle.java      # Vehicle logic and rendering
-├── TrafficSystem.java # Enhanced traffic AI
-└── MovementDirection.java # Type-safe direction enum
+src/
+├── Main.java              # Main application class with GUI and game loop
+├── Vehicle.java           # Vehicle physics, movement, and behavior
+├── TrafficSystem.java     # AI traffic controller and light management
+└── MovementDirection.java # Enum for directional movement
 ```
 
 ## 🧠 AI Traffic System
 
-The core intelligence behind Cyber City Traffic Control:
+The core intelligence behind the Traffic Simulator:
 
 ### 🔄 Adaptive Light Cycling
 - **Round-Robin**: Fair distribution of green time across all directions
@@ -86,9 +92,9 @@ The core intelligence behind Cyber City Traffic Control:
 
 ### 🎯 Smart Priority Logic
 ```java
-// Java implementation example
-if (onlyOneDirectionHasCars && intersectionClear) {
-    switchToThatDirectionImmediately();
+// Example priority check
+if (onlyOneDirectionHasVehicles() && intersectionIsClear()) {
+    switchToDirectionImmediately();
 }
 ```
 
@@ -159,11 +165,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] **Mobile Version**: Touch controls for smartphones
 - [ ] **VR Support**: Immersive 3D traffic control
 
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/M-MDI/Jraffic/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/M-MDI/Jraffic/discussions)
-- **Email**: For private inquiries
 
 ---
 
