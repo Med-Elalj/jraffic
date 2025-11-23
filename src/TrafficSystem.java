@@ -1,8 +1,19 @@
 import java.util.List;
 
 public class TrafficSystem {
-    private static final int PHASE_DURATION_FRAMES = 180;
-    private static final int STARVATION_THRESHOLD_FRAMES = 180;
+    private static final int PHASE_DURATION_FRAMES = 100;
+
+    private static final int VEHICLE_LENGTH = 45;
+    private static final int SAFETY_GAP = 50;
+    private static final int LANE_LENGTH_NORTH = 270; // from y=-30 to y=240
+    private static final int LANE_LENGTH_SOUTH = 280; // from y=700 to y=420
+    private static final int LANE_LENGTH_EAST = 330;  // from x=800 to x=470
+    private static final int LANE_LENGTH_WEST = 330;  // from x=-30 to x=300
+
+    private static final int CAPACITY_NORTH = LANE_LENGTH_NORTH / (VEHICLE_LENGTH + SAFETY_GAP);
+    private static final int CAPACITY_SOUTH = LANE_LENGTH_SOUTH / (VEHICLE_LENGTH + SAFETY_GAP);
+    private static final int CAPACITY_EAST = LANE_LENGTH_EAST / (VEHICLE_LENGTH + SAFETY_GAP);
+    private static final int CAPACITY_WEST = LANE_LENGTH_WEST / (VEHICLE_LENGTH + SAFETY_GAP);
 
     private static boolean intersectionIsClear(List<Vehicle> vehicles) {
         int intersectionLeft = 301;
@@ -31,11 +42,8 @@ public class TrafficSystem {
         public MovementDirection phase;
         public int timer;
         public int phaseDuration;
-        public int starveNorth;
-        public int starveSouth;
-        public int starveEast;
-        public int starveWest;
         public MovementDirection pendingPhase;
+        public int pendingTimer;
 
         public TrafficHub() {
             this.northOn = false;
@@ -45,11 +53,8 @@ public class TrafficSystem {
             this.phase = MovementDirection.East;
             this.timer = 0;
             this.phaseDuration = PHASE_DURATION_FRAMES;
-            this.starveNorth = 0;
-            this.starveSouth = 0;
-            this.starveEast = 0;
-            this.starveWest = 0;
             this.pendingPhase = null;
+            this.pendingTimer = 0;
         }
     }
 
@@ -65,59 +70,105 @@ public class TrafficSystem {
     }
 
     public static void updateLights(TrafficHub hub, List<Vehicle> vehicles) {
-        hub.timer += 1;
+        int qNorth = (int) vehicles.stream().filter(v -> v.startDir == MovementDirection.North && !v.turned && v.y <= 240 && v.y >= -30).count();
+        int qSouth = (int) vehicles.stream().filter(v -> v.startDir == MovementDirection.South && !v.turned && v.y >= 420 && v.y <= 700).count();
+        int qFromWest = (int) vehicles.stream().filter(v -> v.startDir == MovementDirection.East && !v.turned && v.x >= -30 && v.x <= 300).count();
+        int qFromEast = (int) vehicles.stream().filter(v -> v.startDir == MovementDirection.West && !v.turned && v.x >= 470 && v.x <= 800).count();
 
-        boolean hasEast = vehicles.stream().anyMatch(v -> v.startDir == MovementDirection.East && !v.turned);
-        boolean hasNorth = vehicles.stream().anyMatch(v -> v.startDir == MovementDirection.North && !v.turned);
-        boolean hasWest = vehicles.stream().anyMatch(v -> v.startDir == MovementDirection.West && !v.turned);
-        boolean hasSouth = vehicles.stream().anyMatch(v -> v.startDir == MovementDirection.South && !v.turned);
+        int capNorth = CAPACITY_NORTH;
+        int capSouth = CAPACITY_SOUTH;
+        int capFromWest = CAPACITY_WEST;
+        int capFromEast = CAPACITY_EAST;
 
-        Object[][] directions = {
-            {MovementDirection.East, hasEast},
-            {MovementDirection.North, hasNorth},
-            {MovementDirection.West, hasWest},
-            {MovementDirection.South, hasSouth}
-        };
+        double pNorth = capNorth > 0 ? (double) qNorth / capNorth : 0;
+        double pSouth = capSouth > 0 ? (double) qSouth / capSouth : 0;
+        double pFromWest = capFromWest > 0 ? (double) qFromWest / capFromWest : 0;
+        double pFromEast = capFromEast > 0 ? (double) qFromEast / capFromEast : 0;
 
-        for (Object[] dirInfo : directions) {
-            MovementDirection dir = (MovementDirection) dirInfo[0];
-            boolean hasCarsInLane = (boolean) dirInfo[1];
-            if (dir == hub.phase) {
-                switch (dir) {
-                    case East:
-                        hub.starveEast = 0;
-                        break;
-                    case North:
-                        hub.starveNorth = 0;
-                        break;
-                    case West:
-                        hub.starveWest = 0;
-                        break;
-                    case South:
-                        hub.starveSouth = 0;
-                        break;
-                }
-            } else if (hasCarsInLane) {
-                switch (dir) {
-                    case East:
-                        hub.starveEast += 1;
-                        break;
-                    case North:
-                        hub.starveNorth += 1;
-                        break;
-                    case West:
-                        hub.starveWest += 1;
-                        break;
-                    case South:
-                        hub.starveSouth += 1;
-                        break;
-                }
-            }
+        double priorityForPhaseNorth = pNorth;
+        double priorityForPhaseSouth = pSouth;
+        double priorityForPhaseWest = pFromWest;
+        double priorityForPhaseEast = pFromEast;
+
+        double currentPriority = 0;
+        switch (hub.phase) {
+            case North:
+                currentPriority = priorityForPhaseNorth;
+                break;
+            case South:
+                currentPriority = priorityForPhaseSouth;
+                break;
+            case West:
+                currentPriority = priorityForPhaseWest;
+                break;
+            case East:
+                currentPriority = priorityForPhaseEast;
+                break;
+        }
+
+        int base = PHASE_DURATION_FRAMES;
+        int maxExtra = 400;
+        boolean atCapacity = false;
+        switch (hub.phase) {
+            case North:
+                atCapacity = qNorth >= capNorth && capNorth > 0;
+                break;
+            case South:
+                atCapacity = qSouth >= capSouth && capSouth > 0;
+                break;
+            case West:
+                atCapacity = qFromWest >= capFromWest && capFromWest > 0;
+                break;
+            case East:
+                atCapacity = qFromEast >= capFromEast && capFromEast > 0;
+                break;
+        }
+
+        if (atCapacity) {
+            hub.timer = 0;
+            hub.phaseDuration = Math.min(base + maxExtra, base + 50 * (int) Math.max(1, Math.max(Math.max(qNorth - capNorth, qSouth - capSouth), Math.max(qFromWest - capFromWest, qFromEast - capFromEast))));
+        } else {
+            hub.phaseDuration = base + (int) (currentPriority * 200);
+            hub.timer += 1;
         }
 
         if (hub.timer >= hub.phaseDuration) {
             hub.timer = 0;
-            MovementDirection newPhase = determineNextPhase(hub, directions);
+            double highest = 0;
+            MovementDirection newPhase = hub.phase;
+            if (priorityForPhaseNorth > highest) {
+                highest = priorityForPhaseNorth;
+                newPhase = MovementDirection.North;
+            }
+            if (priorityForPhaseSouth > highest) {
+                highest = priorityForPhaseSouth;
+                newPhase = MovementDirection.South;
+            }
+            if (priorityForPhaseEast > highest) {
+                highest = priorityForPhaseEast;
+                newPhase = MovementDirection.East;
+            }
+            if (priorityForPhaseWest > highest) {
+                highest = priorityForPhaseWest;
+                newPhase = MovementDirection.West;
+            }
+
+            if (highest == 0) {
+                switch (hub.phase) {
+                    case East:
+                        newPhase = MovementDirection.North;
+                        break;
+                    case North:
+                        newPhase = MovementDirection.West;
+                        break;
+                    case West:
+                        newPhase = MovementDirection.South;
+                        break;
+                    case South:
+                        newPhase = MovementDirection.East;
+                        break;
+                }
+            }
 
             if (newPhase != hub.phase) {
                 if (intersectionIsClear(vehicles)) {
@@ -130,10 +181,14 @@ public class TrafficSystem {
         }
 
         if (hub.pendingPhase != null) {
-            if (intersectionIsClear(vehicles)) {
+            hub.pendingTimer += 1;
+            if (intersectionIsClear(vehicles) || hub.pendingTimer > 60) {
                 hub.phase = hub.pendingPhase;
                 hub.pendingPhase = null;
+                hub.pendingTimer = 0;
             }
+        } else {
+            hub.pendingTimer = 0;
         }
 
         hub.northOn = false;
@@ -141,72 +196,19 @@ public class TrafficSystem {
         hub.eastOn = false;
         hub.westOn = false;
 
-        if (hub.pendingPhase == null) {
-            switch (hub.phase) {
-                case North:
-                    hub.northOn = true;
-                    break;
-                case South:
-                    hub.southOn = true;
-                    break;
-                case West:
-                    hub.westOn = true;
-                    break;
-                case East:
-                    hub.eastOn = true;
-                    break;
-            }
-        }
-    }
-
-    private static MovementDirection determineNextPhase(TrafficHub hub, Object[][] directions) {
-        int maxStarve = Math.max(Math.max(hub.starveNorth, hub.starveSouth), Math.max(hub.starveEast, hub.starveWest));
-
-        if (maxStarve > STARVATION_THRESHOLD_FRAMES) {
-            if (hub.starveNorth == maxStarve && hasCars(MovementDirection.North, directions)) {
-                return MovementDirection.North;
-            } else if (hub.starveSouth == maxStarve && hasCars(MovementDirection.South, directions)) {
-                return MovementDirection.South;
-            } else if (hub.starveEast == maxStarve && hasCars(MovementDirection.East, directions)) {
-                return MovementDirection.East;
-            } else if (hub.starveWest == maxStarve && hasCars(MovementDirection.West, directions)) {
-                return MovementDirection.West;
-            }
-        }
-
-        MovementDirection[] nextPhases;
         switch (hub.phase) {
-            case East:
-                nextPhases = new MovementDirection[]{MovementDirection.North, MovementDirection.West, MovementDirection.South, MovementDirection.East};
-                break;
             case North:
-                nextPhases = new MovementDirection[]{MovementDirection.West, MovementDirection.South, MovementDirection.East, MovementDirection.North};
-                break;
-            case West:
-                nextPhases = new MovementDirection[]{MovementDirection.South, MovementDirection.East, MovementDirection.North, MovementDirection.West};
+                hub.northOn = true;
                 break;
             case South:
-                nextPhases = new MovementDirection[]{MovementDirection.East, MovementDirection.North, MovementDirection.West, MovementDirection.South};
+                hub.southOn = true;
                 break;
-            default:
-                nextPhases = new MovementDirection[]{};
+            case West:
+                hub.westOn = true;
+                break;
+            case East:
+                hub.eastOn = true;
+                break;
         }
-
-        for (MovementDirection phase : nextPhases) {
-            if (hasCars(phase, directions)) {
-                return phase;
-            }
-        }
-
-        return hub.phase;
-    }
-
-    private static boolean hasCars(MovementDirection dir, Object[][] directions) {
-        for (Object[] direction : directions) {
-            if ((MovementDirection) direction[0] == dir) {
-                return (boolean) direction[1];
-            }
-        }
-        return false;
     }
 }
