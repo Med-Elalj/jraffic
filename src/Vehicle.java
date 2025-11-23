@@ -107,7 +107,7 @@ public class Vehicle {
     }
 
     public boolean blocked(java.util.List<Vehicle> vehicles) {
-        final int SAFE_DISTANCE = 50;
+        final int SAFE_DISTANCE = 95;
         for (Vehicle other : vehicles) {
             if (this.x == other.x && this.y == other.y && this.dir == other.dir) {
                 continue;
