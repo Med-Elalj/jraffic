@@ -44,18 +44,19 @@
 
 1. **Clone the repository**:
    ```bash
-   git clone https://learn.zone01oujda.ma/git/yfaris/jraffic.git
+   git clone https://github.com/your-username/jraffic.git
    cd jraffic
    ```
 
-2. **Compile the source code**:
+2. **Option 1: Use the run script** (recommended):
+   ```bash
+   ./run.sh
+   ```
+
+3. **Option 2: Manual build**:
    ```bash
    cd src
    javac -d ../build *.java
-   ```
-
-3. **Run the simulator**:
-   ```bash
    java -cp ../build Main
    ```
 
