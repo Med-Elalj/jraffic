@@ -15,7 +15,7 @@ public class TrafficSystem {
     private static final int CAPACITY_EAST = LANE_LENGTH_EAST / (VEHICLE_LENGTH + SAFETY_GAP);
     private static final int CAPACITY_WEST = LANE_LENGTH_WEST / (VEHICLE_LENGTH + SAFETY_GAP);
 
-    private static boolean intersectionIsClear(List<Vehicle> vehicles) {
+    static boolean intersectionIsClear(List<Vehicle> vehicles) {
         int intersectionLeft = 301;
         int intersectionRight = 469;
         int intersectionTop = 241;
@@ -32,6 +32,9 @@ public class TrafficSystem {
             }
         }
         return true;
+    }
+    public int add() {
+        return 2 + 3;
     }
 
     public static class TrafficHub {

@@ -64,7 +64,7 @@ public class Main extends JPanel implements ActionListener {
                 String dir = directions[j];
                 String key = color + "_" + dirs[j].name();
                 try {
-                    BufferedImage img = ImageIO.read(new File("../assets/" + color + "/" + dir + ".png"));
+                    BufferedImage img = ImageIO.read(new File("assets/" + color + "/" + dir + ".png"));
                     vehicleImages.put(key, img);
                 } catch (IOException e) {
                     System.err.println("Failed to load image: " + key);
