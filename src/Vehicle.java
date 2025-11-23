@@ -26,9 +26,17 @@ public class Vehicle {
     public static Vehicle spawn(int x, int y, MovementDirection dir, String colorName) {
         Color color;
         switch (colorName) {
-            case "Yellow" -> color = Color.YELLOW;
-            case "Brown" -> color = BROWN;
-            default -> color = Color.BLUE;
+            case "Blue":
+                color = Color.BLUE;
+                break;
+            case "Yellow":
+                color = Color.YELLOW;
+                break;
+            case "Brown":
+                color = BROWN;
+                break;
+            default:
+                color = Color.BLUE;
         }
         return new Vehicle(x, y, dir, color, colorName);
     }
@@ -87,17 +95,18 @@ public class Vehicle {
     }
 
     public static String randColorName() {
-        int rand = (int)(Math.random() * 10);
-        if (rand < 10/3) {
-            return "Blue";
+        int rand = (int) (Math.random() * 3);
+        switch (rand) {
+            case 0:
+                return "Blue";
+            case 1:
+                return "Yellow";
+            default:
+                return "Brown";
         }
-        if (rand < 10/3*2) {
-            return "Yellow";
-        }
-        return "Brown";
     }
 
-    public boolean isBlocked(java.util.List<Vehicle> vehicles) {
+    public boolean blocked(java.util.List<Vehicle> vehicles) {
         final int SAFE_DISTANCE = 50;
         for (Vehicle other : vehicles) {
             if (this.x == other.x && this.y == other.y && this.dir == other.dir) {
