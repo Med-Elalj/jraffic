@@ -1,4 +1,5 @@
-javafx-sdk/
-out/
-bin/
-.idea/
+# Java
+*.class
+
+# Build 
+build/
