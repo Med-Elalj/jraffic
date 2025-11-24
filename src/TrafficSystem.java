@@ -208,6 +208,13 @@ public class TrafficSystem {
 
         if (hub.pendingPhase != null) {
             hub.pendingTimer += 1;
+            if (hub.pendingTimer <= 90) { // 1 second red light phase
+                hub.northOn = false;
+                hub.southOn = false;
+                hub.eastOn = false;
+                hub.westOn = false;
+                return; // Keep all lights red during this phase
+            }
             if (intersectionIsClear(vehicles) || hub.pendingTimer > 60) {
                 hub.phase = hub.pendingPhase;
                 hub.pendingPhase = null;
