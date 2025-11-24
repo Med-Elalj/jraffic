@@ -11,7 +11,7 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 public class Main extends JPanel implements ActionListener {
-        
+
     private static final int WIDTH = 800;
     private static final int HEIGHT = 700;
 
@@ -25,7 +25,7 @@ public class Main extends JPanel implements ActionListener {
         loadImages();
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setFocusable(true);
-        
+
         addKeyListener(new KeyAdapter() {
 
             @Override
@@ -53,15 +53,15 @@ public class Main extends JPanel implements ActionListener {
             }
         });
 
-        timer = new Timer(16, this); 
+        timer = new Timer(16, this);
         timer.start();
     }
 
     private void loadImages() {
-
-        String[] colors = {"Blue", "Yellow", "Brown"};
-        String[] directions = {"up", "down", "left", "right"};
-        MovementDirection[] dirs = {MovementDirection.North, MovementDirection.South, MovementDirection.West, MovementDirection.East};
+        String[] colors = { "Blue", "Yellow", "Brown" };
+        String[] directions = { "up", "down", "left", "right" };
+        MovementDirection[] dirs = { MovementDirection.North, MovementDirection.South, MovementDirection.West,
+                MovementDirection.East };
 
         for (int i = 0; i < colors.length; i++) {
             String color = colors[i];
@@ -69,7 +69,7 @@ public class Main extends JPanel implements ActionListener {
                 String dir = directions[j];
                 String key = color + "_" + dirs[j].name();
                 try {
-                    BufferedImage img = ImageIO.read(new File("../assets/" + color + "/" + dir + ".png"));
+                    BufferedImage img = ImageIO.read(new File("assets/" + color + "/" + dir + ".png"));
                     vehicleImages.put(key, img);
                 } catch (IOException e) {
                     System.err.println("Failed to load image: " + key);
@@ -160,7 +160,7 @@ public class Main extends JPanel implements ActionListener {
                 int y = v.y;
                 int w = (int) Math.round(30 * 1.2);
                 int h = (int) Math.round(45 * 1.2);
-                g.fillRect(x - w/2, y - h/2, w, h);
+                g.fillRect(x - w / 2, y - h / 2, w, h);
 
             }
         }
@@ -185,11 +185,9 @@ public class Main extends JPanel implements ActionListener {
             return false;
         }
 
-        return !vehicleList.stream().anyMatch(v ->
-            v.startDir == dir
-            && Math.abs(spawnX - v.x) < MIN_SPAWN_DISTANCE
-            && Math.abs(spawnY - v.y) < MIN_SPAWN_DISTANCE
-        );
+        return !vehicleList.stream().anyMatch(v -> v.startDir == dir
+                && Math.abs(spawnX - v.x) < MIN_SPAWN_DISTANCE
+                && Math.abs(spawnY - v.y) < MIN_SPAWN_DISTANCE);
     }
 
     private static void addVehicleAt(List<Vehicle> vehicleList, int x, int y, MovementDirection dir) {
@@ -217,7 +215,7 @@ public class Main extends JPanel implements ActionListener {
     private static void addRandom(List<Vehicle> vehicleList) {
 
         int rand = (int) (Math.random() * 4);
-        
+
         switch (rand) {
             case 0:
                 addSouth(vehicleList);
@@ -232,7 +230,7 @@ public class Main extends JPanel implements ActionListener {
                 addEast(vehicleList);
                 break;
         }
-        
+
     }
 
     public static void main(String[] args) {
@@ -244,6 +242,6 @@ public class Main extends JPanel implements ActionListener {
             frame.pack();
             frame.setVisible(true);
         });
-        
+
     }
 }
