@@ -1,27 +1,22 @@
 import java.util.List;
 
-// TrafficSystem contains the logic for managing traffic light phases and
-// simple lane capacity heuristics. It is intentionally lightweight — the
-// update logic computes simple priorities and rotates phases based on queues.
 public class TrafficSystem {
 
     private static final int PHASE_DURATION_FRAMES = 100;
+    private static final int MAX_GREEN_FRAMES = 938;
 
     private static final int VEHICLE_LENGTH = 45;
     private static final int SAFETY_GAP = 50;
-    private static final int LANE_LENGTH_NORTH = 270; // from y=-30 to y=240
-    private static final int LANE_LENGTH_SOUTH = 280; // from y=700 to y=420
-    private static final int LANE_LENGTH_EAST = 330;  // from x=800 to x=470
-    private static final int LANE_LENGTH_WEST = 330;  // from x=-30 to x=300
+    private static final int LANE_LENGTH_NORTH = 270;
+    private static final int LANE_LENGTH_SOUTH = 280;
+    private static final int LANE_LENGTH_EAST = 330;
+    private static final int LANE_LENGTH_WEST = 330;
 
     private static final int CAPACITY_NORTH = LANE_LENGTH_NORTH / (VEHICLE_LENGTH + SAFETY_GAP);
     private static final int CAPACITY_SOUTH = LANE_LENGTH_SOUTH / (VEHICLE_LENGTH + SAFETY_GAP);
     private static final int CAPACITY_EAST = LANE_LENGTH_EAST / (VEHICLE_LENGTH + SAFETY_GAP);
     private static final int CAPACITY_WEST = LANE_LENGTH_WEST / (VEHICLE_LENGTH + SAFETY_GAP);
 
-    // Return true when no vehicle is currently inside the intersection box.
-    // Used to ensure phase changes do not send conflicting traffic through
-    // the intersection at the same time.
     private static boolean intersectionIsClear(List<Vehicle> vehicles) {
 
         int intersectionLeft = 301;
@@ -45,8 +40,6 @@ public class TrafficSystem {
 
     }
 
-    // TrafficHub stores the current phase state (which direction is green),
-    // timers, and pending phase requests waiting for the intersection to clear.
     public static class TrafficHub {
 
         public boolean northOn;
@@ -60,7 +53,6 @@ public class TrafficSystem {
         public MovementDirection pendingPhase;
         public int pendingTimer;
 
-        // Initialize hub with a default phase and timers.
         public TrafficHub() {
             this.northOn = false;
             this.southOn = false;
@@ -75,9 +67,6 @@ public class TrafficSystem {
         
     }
 
-    // Set `vehicle.moving` depending on whether the hub currently allows
-    // vehicles of that direction to pass at their lane boundary. This is a
-    // simple gate (on/off) used by the vehicle update loop.
     public static void checkLights(Vehicle vehicle, TrafficHub hub) {
 
         if ((!hub.southOn && vehicle.dir == MovementDirection.South && vehicle.y == 420)
@@ -91,12 +80,7 @@ public class TrafficSystem {
 
     }
 
-    // Update traffic light phase based on simple queue length heuristics and
-    // lane capacity. This method may delay phase changes until the
-    // intersection is clear to avoid collisions.
     public static void updateLights(TrafficHub hub, List<Vehicle> vehicles) {
-        // Count queued vehicles waiting in each incoming lane (not yet turned).
-        // These counts drive the heuristics used to decide phase priorities.
         int qNorth = (int) vehicles.stream()
             .filter(v -> v.startDir == MovementDirection.North && !v.turned && v.y <= 240 && v.y >= -30)
             .count();
@@ -115,8 +99,6 @@ public class TrafficSystem {
         int capFromWest = CAPACITY_WEST;
         int capFromEast = CAPACITY_EAST;
 
-        // Normalize queue sizes by lane capacity to get a congestion ratio
-        // (0..1+). This helps balance long vs short lanes fairly.
         double pNorth = capNorth > 0 ? (double) qNorth / capNorth : 0;
         double pSouth = capSouth > 0 ? (double) qSouth / capSouth : 0;
         double pFromWest = capFromWest > 0 ? (double) qFromWest / capFromWest : 0;
@@ -144,7 +126,6 @@ public class TrafficSystem {
                 break;
         }
 
-        // Base timings and an upper bound for adaptive extensions.
         int base = PHASE_DURATION_FRAMES;
         int maxExtra = 400;
         boolean atCapacity = false;
@@ -165,17 +146,15 @@ public class TrafficSystem {
         }
 
         if (atCapacity) {
-            // If the active lane is beyond capacity, reset the timer and
-            // give it an extended green up to a capped maximum to drain queue.
-            hub.timer = 0;
             hub.phaseDuration = Math.min(base + maxExtra,
-                    base + 50 * (int) Math.max(1, Math.max(Math.max(qNorth - capNorth, qSouth - capSouth), Math.max(qFromWest - capFromWest, qFromEast - capFromEast))));
+                    base + 50 * (int) Math.max(1, Math.max(Math.max(qNorth - capNorth, qSouth - capSouth), Math.max(qFromWest - capFromWest, qFromEast - capFromEast)))) ;
         } else {
-            // Otherwise set an adaptive duration proportional to the
-            // congestion priority and advance the internal timer.
             hub.phaseDuration = base + (int) (currentPriority * 200);
-            hub.timer += 1;
         }
+
+        hub.phaseDuration = Math.min(hub.phaseDuration, MAX_GREEN_FRAMES);
+
+        hub.timer += 1;
 
         if (hub.timer >= hub.phaseDuration) {
 
@@ -199,8 +178,6 @@ public class TrafficSystem {
                 newPhase = MovementDirection.West;
             }
 
-            // If there is no demand (highest==0), rotate phases in a fixed
-            // order to keep traffic flowing evenly rather than stalling.
             if (highest == 0) {
                 switch (hub.phase) {
                     case East:
@@ -218,9 +195,6 @@ public class TrafficSystem {
                 }
             }
 
-            // Attempt to switch to the chosen phase. If the intersection is
-            // occupied, schedule it as pending until it clears to avoid
-            // allowing conflicting movements.
             if (newPhase != hub.phase) {
                 if (intersectionIsClear(vehicles)) {
                     hub.phase = newPhase;
@@ -232,8 +206,6 @@ public class TrafficSystem {
             
         }
 
-        // If a phase is pending, wait for the intersection to become clear
-        // or for a small timeout before forcing the change to avoid deadlock.
         if (hub.pendingPhase != null) {
             hub.pendingTimer += 1;
             if (intersectionIsClear(vehicles) || hub.pendingTimer > 60) {
@@ -245,8 +217,6 @@ public class TrafficSystem {
             hub.pendingTimer = 0;
         }
 
-        // Set the explicit boolean flags for which directions currently
-        // have a green light. This simplifies checks elsewhere.
         hub.northOn = false;
         hub.southOn = false;
         hub.eastOn = false;
