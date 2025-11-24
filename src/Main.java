@@ -198,7 +198,7 @@ public class Main extends JPanel implements ActionListener {
                 int y = v.y;
                 int w = (int) Math.round(30 * 1.2);
                 int h = (int) Math.round(45 * 1.2);
-                g.fillRect(x - w/2, y - h/2, w, h);*
+                g.fillRect(x - w/2, y - h/2, w, h);
 
             }
         }
